@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-data_dir = Path(__file__).resvolve().parents[1]/"data"
+data_dir = Path(__file__).resolve().parents[1]/"data"
 
 def load_generator_parameters():
     """
@@ -13,7 +13,7 @@ def load_generator_parameters():
     df = pd.read_csv(data_dir/"Parameters_generators_NL.csv", sep=";")
     df = df.sort_values("generator_index")
 
-    generator_ids = df["generator_index"].astype(int).toList()
+    generator_ids = df["generator_index"].astype(int).tolist()
     k = df["max_capacity"].to_numpy(dtype=float)
     gamma_u = df["ramp_up"].to_numpy(dtype=float)
     gamma_d = df["ramp_down"].to_numpy(dtype=float)
