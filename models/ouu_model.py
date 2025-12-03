@@ -7,6 +7,7 @@ from data_utils import(
     compute_emission_means,
     load_demand_forecast,
     compute_demand_residuals,
+    compute_daily_errors,
 )
 
 # Generate scenarios
@@ -23,16 +24,32 @@ def sample_demand_scenarios(forecast, residuals_by_hour, N, seed=42):
     
     return scenarios
 
+def sample_daily_scenarios(forecast, daily_errors, N, seed=42):
+    rng = np.random.default_rng(seed)
+    D, T = daily_errors.shape
+    assert T == len(forecast)
+
+    scenarios = np.zeros((N, T))
+
+    for s in range(N):
+        d_idx = rng.integers(0, D)
+        errors = daily_errors[d_idx, :]
+        scenarios[s, :] = np.maximum(forecast + errors, 0.0)
+     
+    return scenarios
+
 def build_ouu_model(N, seed=42, model_name="ouu"):
     generator_ids, c, k, gamma_u, gamma_d = load_generator_parameters()
     mean_emissions = compute_emission_means()
     forecast = load_demand_forecast()
-    residuals_by_hour = compute_demand_residuals()
+    # residuals_by_hour = compute_demand_residuals()
+    daily_errors, dates = compute_daily_errors()
 
     T = len(forecast)
     J = len(generator_ids)
 
-    demand_scen = sample_demand_scenarios(forecast, residuals_by_hour, N, seed=seed)
+    # demand_scen = sample_demand_scenarios(forecast, residuals_by_hour, N, seed=seed)
+    demand_scen = sample_daily_scenarios(forecast, daily_errors, N, seed=seed)
 
     m = gp.Model(model_name)
     hours = range(T)
@@ -102,7 +119,7 @@ def solve_ouu(N, seed=42):
     return q_opt, m.ObjVal, info
 
 if __name__ == "__main__":
-    N = 10000
+    N = 500
     seed = 42
     
     print(f"Running OUU model with N={N}...")

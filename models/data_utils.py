@@ -67,3 +67,33 @@ def compute_demand_residuals(cutoff_date="2022-12-09"):
         residuals_by_hour.append(values)
 
     return residuals_by_hour
+
+def compute_daily_errors(cutoff_date="2022-12-09"):
+    df = pd.read_csv(data_dir/"Demand_2020_2022.csv", sep=";")
+    df["Time"] = pd.to_datetime(df["Time"], format="mixed", dayfirst=True)
+
+    df["error"] = (
+        df["Realized_residual_demand"]
+        - df["Forecasted_residual_demand"]
+    )
+
+    df["date"] = df["Time"].dt.date
+    df["hour"] = df["Time"].dt.hour
+
+    cutoff = pd.to_datetime(cutoff_date).date()
+    hist = df[df["date"] < cutoff].copy()
+
+    grouped = hist.groupby("date")
+
+    daily_errors = []
+    valid_dates = []
+
+    for d, g in grouped:
+        if g["hour"].nunique() == 24:
+            g_sorted = g.sort_values("hour")
+            daily_errors.append(g_sorted["error"].to_numpy(dtype=float))
+            valid_dates.append(d)
+
+    daily_errors = np.vstack(daily_errors)
+
+    return daily_errors, valid_dates
