@@ -102,7 +102,7 @@ def solve_ouu(N, seed=42):
     return q_opt, m.ObjVal, info
 
 if __name__ == "__main__":
-    N = 3000
+    N = 10000
     seed = 42
     
     print(f"Running OUU model with N={N}...")
@@ -112,13 +112,13 @@ if __name__ == "__main__":
     print("\n==== OUU objective value ====")
     print(obj_val)
 
-    print("\n ==== Optimal production per hour (MW) ====")
-    generator_ids = info["generator_ids"]
+    # print("\n ==== Optimal production per hour (MW) ====")
+    # generator_ids = info["generator_ids"]
 
-    T, J = q_opt.shape
-    for t in range(T):
-        print(f"\nHour {t}:")
-        for j in range(J):
-            print(f" Generator {generator_ids[j]}: {q_opt[t, j]:.2f}")
-        print(f" Total: {q_opt[t, :].sum():.2f}")
+    # T, J = q_opt.shape
+    # for t in range(T):
+    #     print(f"\nHour {t}:")
+    #     for j in range(J):
+    #         print(f" Generator {generator_ids[j]}: {q_opt[t, j]:.2f}")
+    #     print(f" Total: {q_opt[t, :].sum():.2f}")
     
