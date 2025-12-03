@@ -64,7 +64,7 @@ def build_nominal_model(model_name="nominal"):
         "mean_emissions": mean_emissions,
     }
 
-    return m. q, info
+    return m, q, info
 
 def solve_nominal():
     m, q, info = build_nominal_model()
@@ -90,13 +90,15 @@ if __name__ == "__main__":
 
     q_opt, obj_val, info = solve_nominal()
 
-    print("\nNominal objective value: " + obj_val)
+    print("\n==== Nominal objective value ====")
+    print(obj_val)
 
-    print("\nOptimal production per hour (MW):")
-    T, J = q_opt.shape
-    gen_ids = info["generator_ids"]
-    for t in range(T):
-        print(f"\nHour {t}:")
-        for j in range(J):
-            print(f"  Generator {gen_ids[j]}: {q_opt[t, j]:.2f}")
-        print(f"  Total: {q_opt[t, :].sum():.2f}")
+    # print("\n ==== Optimal production per hour (MW) ====")
+    # generator_ids = info["generator_ids"]
+
+    # T, J = q_opt.shape
+    # for t in range(T):
+    #     print(f"\nHour {t}:")
+    #     for j in range(J):
+    #         print(f" Generator {generator_ids[j]}: {q_opt[t, j]:.2f}")
+    #     print(f" Total: {q_opt[t, :].sum():.2f}")
