@@ -8,7 +8,7 @@ from load_data import load_demand_history
 def analyze_demand_errors(): 
     df = load_demand_history()
 
-    df["error"] = df["Forecasted_residual_demand"] - df["Realized_residual_demand"]
+    df["error"] = df["Realized_residual_demand"] - df["Forecasted_residual_demand"]
 
     df["hour"] = df["Time"].dt.hour
 
