@@ -51,3 +51,5 @@ def build_base_model(c, k, gamma_u, gamma_d, demand, emissions, model_name="base
     m.setObjective(0.65 * cost_term + 0.35 * emission_term, GRB.MINIMIZE)
 
     return m, q
+
+# if __name__ == "__main__":
