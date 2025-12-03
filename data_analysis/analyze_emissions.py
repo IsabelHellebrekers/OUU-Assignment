@@ -17,6 +17,9 @@ E = df[emission_cols].astype(float).to_numpy()   # shape (N, J)
 mu = E.mean(axis=0)            # (J,)
 sigma = E.std(axis=0, ddof=1)  # (J,)
 
+def emissions_mean() :
+    return mu
+
 print("mu:", mu)
 print("sigma:", sigma)
 
