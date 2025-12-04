@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
 results = Path(__file__).resolve().parents[1]/"results"
 
@@ -28,26 +29,30 @@ if __name__ == "__main__":
     print("Average price increase:", np.mean(price_diff))
 
     plt.figure(figsize=(10,5))
-    plt.plot(p_nom, label="Nominal price")
-    plt.plot(p_ouu, label="OUU price")
-    plt.title("Day-Ahead Price Comparison")
+    plt.plot(p_nom, label="Nominal price", color='lightskyblue')
+    plt.plot(p_ouu, label="OUU price", color='lightcoral')
+    # plt.title("Day-Ahead Price Comparison")
     plt.xlabel("Hour")
-    plt.ylabel("Price (€/MWh)")
+    plt.xticks(np.arange(0, 24, 2))
+    plt.ylabel("Price")
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig("figures/price_comparison.png")
+    plt.close()
 
     total_nom = q_nom.sum(axis=1)
     total_ouu = q_ouu.sum(axis=1)
 
     plt.figure(figsize=(10,5))
-    plt.plot(total_nom, label="Nominal total production")
-    plt.plot(total_ouu, label="OUU total production")
-    plt.title("Total Production Comparison")
+    plt.plot(total_nom, label="Nominal total production", color='lightskyblue')
+    plt.plot(total_ouu, label="OUU total production", color='lightcoral')
+    # plt.title("Total Production Comparison")
     plt.xlabel("Hour")
+    plt.xticks(np.arange(0, 24, 2))
     plt.ylabel("MW")
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig("figures/production_comparison.png")
+    plt.close()
 
     
