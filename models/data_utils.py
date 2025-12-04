@@ -97,3 +97,25 @@ def compute_daily_errors(cutoff_date="2022-12-09"):
     daily_errors = np.vstack(daily_errors)
 
     return daily_errors, valid_dates
+
+def save_solution_csv(results_dir, prefix, obj_val, q_opt, prices, generator_ids):
+    results_dir = Path(results_dir)
+    results_dir.mkdir(exist_ok=True)
+
+    df_obj = pd.DataFrame({"objective": [obj_val]})
+    df_obj.to_csv(results_dir / f"{prefix}_objective.csv", index=False)
+
+    T, J = q_opt.shape
+    df_q = pd.DataFrame(q_opt, 
+                        index=np.arange(T),
+                        columns=generator_ids)
+    df_q.index.name = "hour"
+    df_q.to_csv(results_dir / f"{prefix}_q.csv")
+
+    df_p = pd.DataFrame({
+        "hour": np.arange(T),
+        "price": prices
+    })
+    df_p.to_csv(results_dir / f"{prefix}_prices.csv", index=False)
+
+    print(f"Saved: {prefix}_objective.csv, {prefix}_q.csv, {prefix}_prices.csv")

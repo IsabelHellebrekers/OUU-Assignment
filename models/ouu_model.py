@@ -1,6 +1,8 @@
 import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
+from pathlib import Path 
+import pandas as pd 
 
 from data_utils import(
     load_generator_parameters,
@@ -8,7 +10,10 @@ from data_utils import(
     load_demand_forecast,
     compute_demand_residuals,
     compute_daily_errors,
+    save_solution_csv,
 )
+
+results_dir = Path(__file__).resolve().parents[1]/"results"
 
 # Generate scenarios
 def sample_demand_scenarios(forecast, residuals_by_hour, N, seed=42):
@@ -93,14 +98,15 @@ def build_ouu_model(N, seed=42, model_name="ouu"):
         "gamma_d": gamma_d,
         "forecast": forecast,
         "mean_emissions": mean_emissions,
-        "residuals_by_hour": residuals_by_hour,
+        "daily_errors": daily_errors,
+        "dates": dates,
         "demand_scenarios": demand_scen
     }
 
     return m, q, info
 
 def solve_ouu(N, seed=42):
-    m, q, info = build_ouu_model(N=N, seed=42)
+    m, q, info = build_ouu_model(N=N, seed=seed)
 
     m.Params.OutputFlag = 1
     m.optimize()
@@ -115,27 +121,42 @@ def solve_ouu(N, seed=42):
     for t in range(T): 
         for j in range(J):
             q_opt[t, j] = q[t, j].X
+    
+    prices = compute_day_ahead_prices(q_opt, info["c"])
 
-    return q_opt, m.ObjVal, info
+    return q_opt, m.ObjVal, prices, info
+
+def compute_day_ahead_prices(q_opt, costs, tol: float=1e-6):
+    T, J = q_opt.shape
+    prices = np.zeros(T)
+
+    for t in range(T):
+        active = q_opt[t, :] > tol
+        if np.any(active):
+            prices[t] = float(costs[active].max())
+        else: 
+            prices[t] = 0.0
+
+    return prices
 
 if __name__ == "__main__":
-    N = 500
+    N = 1000
     seed = 42
     
     print(f"Running OUU model with N={N}...")
 
-    q_opt, obj_val, info = solve_ouu(N=N, seed=seed)
+    q_opt, obj_val, prices, info = solve_ouu(N=N, seed=seed)
 
     print("\n==== OUU objective value ====")
     print(obj_val)
 
-    # print("\n ==== Optimal production per hour (MW) ====")
-    # generator_ids = info["generator_ids"]
-
-    # T, J = q_opt.shape
-    # for t in range(T):
-    #     print(f"\nHour {t}:")
-    #     for j in range(J):
-    #         print(f" Generator {generator_ids[j]}: {q_opt[t, j]:.2f}")
-    #     print(f" Total: {q_opt[t, :].sum():.2f}")
+    save_solution_csv(
+        results_dir=results_dir,
+        prefix=f"ouu",
+        obj_val=obj_val,
+        q_opt=q_opt,
+        prices=prices,
+        generator_ids=info["generator_ids"]
+    )
     
+

@@ -1,12 +1,16 @@
 import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
+from pathlib import Path
 
 from data_utils import (
     load_demand_forecast,
     load_generator_parameters,
     compute_emission_means,
+    save_solution_csv,
 )
+
+results_dir = Path(__file__).resolve().parents[1]/"results"
 
 def build_nominal_model(model_name="nominal"):
     generator_ids, c, k, gamma_u, gamma_d = load_generator_parameters()
@@ -83,22 +87,36 @@ def solve_nominal():
         for j in range(J):
             q_opt[t, j] = q[t, j].X
 
-    return q_opt, m.ObjVal, info
+    prices = compute_day_ahead_prices(q_opt, info["c"])
+
+    return q_opt, m.ObjVal, prices, info
+
+def compute_day_ahead_prices(q_opt, costs, tol: float=1e-6):
+    T, J = q_opt.shape
+    prices = np.zeros(T)
+
+    for t in range(T):
+        active = q_opt[t, :] > tol
+        if np.any(active):
+            prices[t] = float(costs[active].max())
+        else: 
+            prices[t] = 0.0
+
+    return prices
 
 if __name__ == "__main__":
     print("Running nominal model...")
 
-    q_opt, obj_val, info = solve_nominal()
+    q_opt, obj_val, prices, info = solve_nominal()
 
     print("\n==== Nominal objective value ====")
     print(obj_val)
 
-    # print("\n ==== Optimal production per hour (MW) ====")
-    # generator_ids = info["generator_ids"]
-
-    # T, J = q_opt.shape
-    # for t in range(T):
-    #     print(f"\nHour {t}:")
-    #     for j in range(J):
-    #         print(f" Generator {generator_ids[j]}: {q_opt[t, j]:.2f}")
-    #     print(f" Total: {q_opt[t, :].sum():.2f}")
+    save_solution_csv(
+        results_dir=results_dir,
+        prefix="nominal",
+        obj_val=obj_val,
+        q_opt=q_opt,
+        prices=prices,
+        generator_ids=info["generator_ids"]
+    )
