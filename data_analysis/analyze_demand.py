@@ -33,7 +33,7 @@ def analyze_demand_errors():
 
     plt.figure(figsize=(8,5))
     sns.histplot(df["error"], kde=True, bins=50)
-    plt.title("Distribution of Demand Forecast Errors")
+    # plt.title("Distribution of Demand Forecast Errors")
     plt.xlabel("Forecast Error (MW)")
     plt.ylabel("Frequency")
     plt.tight_layout()
