@@ -5,6 +5,25 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
 results = Path(__file__).resolve().parents[1]/"results"
+data_dir = Path(__file__).resolve().parents[1]/"data"
+
+def load_generator_parameters():
+    """
+    Columns in csv: 'generator_index', 'type', 'max_capacity', 
+    'ramp_up', 'ramp_down', 'marginal_cost'
+    """
+
+    df = pd.read_csv(data_dir/"Parameters_generators_NL.csv", sep=";")
+    df = df.sort_values("generator_index")
+
+    generator_ids = df["generator_index"].astype(int).tolist()
+    k = df["max_capacity"].to_numpy(dtype=float)
+    gamma_u = df["ramp_up"].to_numpy(dtype=float)
+    gamma_d = df["ramp_down"].to_numpy(dtype=float)
+    c = df["marginal_cost"].to_numpy(dtype=float)
+
+    return generator_ids, c, k, gamma_u, gamma_d
+
 
 def load_solution(prefix):
     q = pd.read_csv(results/f"{prefix}_q.csv", index_col="hour")
@@ -46,13 +65,51 @@ if __name__ == "__main__":
     plt.figure(figsize=(10,5))
     plt.plot(total_nom, label="Nominal total production", color='lightskyblue')
     plt.plot(total_ouu, label="OUU total production", color='lightcoral')
+    plt.plot(total_ouu - total_nom, label="Production difference", color='lightgreen')
     # plt.title("Total Production Comparison")
     plt.xlabel("Hour")
     plt.xticks(np.arange(0, 24, 2))
     plt.ylabel("MW")
     plt.legend()
     plt.grid(True)
+    # plt.show()
     plt.savefig("figures/production_comparison.png")
     plt.close()
+
+    gen_ids, c, k, gamma_u, gamma_d = load_generator_parameters()
+    k = np.array(k)
+    c = np.array(c)
+
+    util_nom = q_nom / k
+    util_ouu = q_ouu / k
+
+    avg_util_nom = util_nom.mean(axis=0)
+    avg_util_ouu = util_ouu.mean(axis=0)
+
+    max_util_nom = util_nom.max(axis=0)
+    max_util_ouu = util_ouu.max(axis=0)
+
+    order = np.argsort(c)
+    gen_sorted = np.array(gen_ids)[order]
+
+    avg_nom_sorted = avg_util_nom[order]
+    avg_ouu_sorted = avg_util_ouu[order]
+    max_nom_sorted = max_util_nom[order]
+    max_ouu_sorted = max_util_ouu[order]
+
+    plt.figure(figsize=(10,5))
+    x = np.arange(len(gen_sorted))
+
+    plt.bar(x - 0.2, avg_nom_sorted, width=0.4, label="Nominal", color='lightskyblue')
+    plt.bar(x + 0.2, avg_ouu_sorted, width=0.4, label="OUU", color='lightcoral')
+
+    plt.xticks(x, gen_sorted, rotation=90)
+    plt.ylabel("Average utilisation")
+    plt.xlabel("Generator")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("figures/average_utilisation.png")
+    plt.close()
+
 
     
