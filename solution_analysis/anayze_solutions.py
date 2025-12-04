@@ -104,11 +104,11 @@ if __name__ == "__main__":
     plt.bar(x + 0.2, avg_ouu_sorted, width=0.4, label="OUU", color='lightcoral')
 
     plt.xticks(x, gen_sorted, rotation=90)
-    plt.ylabel("Average utilisation")
+    plt.ylabel("Average utilization")
     plt.xlabel("Generator")
     plt.legend()
     plt.tight_layout()
-    plt.savefig("figures/average_utilisation.png")
+    plt.savefig("figures/average_utilization.png")
     plt.close()
 
 
