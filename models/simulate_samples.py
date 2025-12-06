@@ -8,7 +8,7 @@ from data_utils import (
 )
 
 data_dir = Path(__file__).resolve().parents[1]/"data"
-out_dir = Path(__file__).resolve().parents[1]/"results"
+results_dir = Path(__file__).resolve().parents[1]/"results"
 sample_dir = Path(__file__).resolve().parents[1]/"test_sample"
 
 def compute_emission_stats():

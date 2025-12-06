@@ -1,0 +1,3 @@
+model,avg_cost,std_cost,violation_rate
+nominal,59063.9729,522.9968,1.0000
+ouu,83545.6844,601.2320,0.0070
