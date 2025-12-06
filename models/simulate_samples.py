@@ -7,10 +7,9 @@ from data_utils import (
     compute_daily_errors,
 )
 
-this_dir = Path(__file__).resolve().parent
-root_dir = this_dir.parent[1]
-data_dir = root_dir/"data"
-out_dir = root_dir/"results"
+data_dir = Path(__file__).resolve().parents[1]/"data"
+out_dir = Path(__file__).resolve().parents[1]/"results"
+sample_dir = Path(__file__).resolve().parents[1]/"test_sample"
 
 def compute_emission_stats():
     df = pd.read_csv(data_dir/"Emission_2020_2022.csv", sep=";")
@@ -25,12 +24,41 @@ def compute_emission_stats():
 def simulate_test_samples(N_test=2000, seed=99):
     """
     Simulate N_test for out-of-sample validation
-
-    for each scenario s: 
-        demand_s[s, t] : hourly residual demand (bootstrap)
     """
 
+    rng = np.random.default_rng(seed)
 
+    forecast = load_demand_forecast()
+    daily_errors, dates = compute_daily_errors()
+
+    D, T = daily_errors.shape
+    assert T == len(forecast)
+
+    demand_test = np.zeros((N_test, T))
+
+    for s in range(N_test):
+        d_idx = rng.integers(0,D)
+        errors = daily_errors[d_idx, :]
+        demand_test[s, :] = np.maximum(forecast + errors, 0.0)
+    
+    mu, sigma = compute_emission_stats()
+    J = len(mu)
+
+    emission_test = rng.normal(loc=mu, scale=sigma, size=(N_test, J))
+
+    sample_dir.mkdir(exist_ok=True)
+
+    np.save(sample_dir/"test_demand.npy", demand_test)
+    np.save(sample_dir/"test_emissions.npy", emission_test)
+
+    pd.DataFrame(demand_test).to_csv(sample_dir/ "test_demand.csv", index=False)
+    pd.DataFrame(emission_test).to_csv(sample_dir/"test_emissions.csv", index=False)
+
+    print(f"Saved test samples to {sample_dir}")
+    return demand_test, emission_test
+
+if __name__ == "__main__":
+    simulate_test_samples(N_test=2000, seed=99)
 
 
 
